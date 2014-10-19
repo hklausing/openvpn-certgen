@@ -1,0 +1,37 @@
+# .gitignore
+#
+###############
+
+# Temporary files
+*.bak
+*.html
+*.out
+doc/*.pdf
+*.log
+teststaff.*
+
+# Paths
+obsolete/
+tmp/
+usr/
+var/
+collection/
+unused/
+icu-html/
+test_results/
+
+# not used build pathes and files
+Build
+LICENSE
+*.json
+*.yml
+_build/
+blib/
+cover_db/
+*.tar.gz
+*.swp
+MANIFEST
+Makefile.PL
+MANIFEST
+Makefile.PL
+
