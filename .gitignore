@@ -17,7 +17,6 @@ usr/
 var/
 collection/
 unused/
-icu-html/
 test_results/
 
 # not used build pathes and files
@@ -28,7 +27,6 @@ LICENSE
 _build/
 blib/
 cover_db/
-*.tar.gz
 *.swp
 MANIFEST
 Makefile.PL
