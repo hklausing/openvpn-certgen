@@ -22,7 +22,7 @@ my $builder = Module::Build->new(
     license        => 'GPL3',
     dist_author    => q{H. Klausing <h dot klausing at gmx dot de>},
     dist_abstract  => 'OpenVPN certificate Generator for Linux environment',
-    dist_version   => '0.001',
+    dist_version   => '0.002',
     create_readme  => 0,                                                       # do not touch the existing README
     sign           => 0,                                                       # no signature is required
     release_status => 'stable',
@@ -48,7 +48,7 @@ my $builder = Module::Build->new(
         'Cwd'                   => '3.36',
         'Archive::Zip'          => '1.3',
         'Archive::Tar'          => '1.9',
-        'File::Find'            => '1.23',
+        'File::Find'            => '1.19',
         'Pod::Usage'            => '1.36',
         'Carp'                  => '1.32',
     },
