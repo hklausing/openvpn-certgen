@@ -21,6 +21,8 @@
 # Update list:
 # 2014-10-12    v0.001 H. Klausing
 #               initial script
+# 2014-10-27    v0.002 H. Klausing
+#               Update of build script. Comments removed.
 ################################################################################
 #
 #
@@ -57,8 +59,8 @@ use Carp qw(croak);                       # required for croak()
 #
 #
 #--- constants -------------------------
-our $VERSION = '0.001';
-my $RELEASE_DATE = '2014-09-24';
+our $VERSION = '0.002';
+my $RELEASE_DATE = '2014-10-27';
 Readonly::Hash my %DISTRIBUTION_LIST => (
     'Debian' => {
         'easyrsa_trg'  => '/usr/share/doc/openvpn/examples/easy-rsa',
@@ -78,16 +80,16 @@ Readonly my $SCRIPTNAME => File::Basename::basename($0);
 #
 #
 #--- global variables --------------------------------------------------
-my %g_options     = ();
+my %g_options     = ('verbose' => 1);
 my %g_distributor = ();
 my %g_paths       = ();
-my $g_dist_ref    = undef;    #reference to found distributor value
-my $g_config      = undef;    # reference to configuration file value
+my $g_dist_ref    = undef;               #reference to found distributor value
+my $g_config      = undef;               # reference to configuration file value
 #
 #
 #--- script function start -------------
 __PACKAGE__->main(@ARGV) unless caller();    # based on Modulino
-#main();
+##main();
 #
 #
 #
@@ -138,7 +140,7 @@ sub main {
     }
 
     # prepare check
-    my $testuser = (-W getLastExistingDir($g_options{'target'}))? 0 : 1;
+    my $testuser = (-W getLastExistingDir($g_options{'target'})) ? 0 : 1;
     $sts = checkExecutionRequirements('TestUser' => $testuser);
 
     if ($g_options{'clean'} == 0 && !$sts) {
@@ -230,20 +232,16 @@ sub doClean {
     my $sts = 0;
 
     if (-d $g_paths{'OVPN-easy-rsa'}) {
-
-        #        isRoot();    # checks if the current user is root
         remove_tree($g_paths{'OVPN-easy-rsa'});
         notify(3, "Path '$g_paths{'OVPN-easy-rsa'}' deleted.");
     }
 
     if (-d $g_paths{'OVPN-certificates'}) {
-
-        #        isRoot();    # checks if the current user is root
         remove_tree($g_paths{'OVPN-certificates'});
         notify(3, "Path '$g_paths{'OVPN-certificates'}' deleted.");
     }
     return $sts;
-} ## end sub doClean
+}
 
 
 
@@ -1316,15 +1314,16 @@ sub getLastExistingDir {
     ############################################################################
     my ($dir) = @_;
 
-    if($dir !~ /^ \/ /smx){
+    if ($dir !~ /^ \/ /smx) {
         ## directory is a relative name, add the current directory to it
         $dir = abs_path($dir) // '/';
     }
-    while(! -d $dir) {
+
+    while (!-d $dir) {
         $dir =~ s/ \w+ \/? $//smx;
     }
     return $dir;
-} ## end sub extractTarGzFile
+}
 
 
 
@@ -1334,7 +1333,8 @@ sub notify {
     # Outputs a text information if the current verbose level is less or
     # equal than the assigned test-output-level.
     # Param1:   assigned output level
-    # Param2:   text information; can be a scalar or an array of output text.
+    # Param2:   text information; can be a scalar or a reference to an array 
+    #           of output text.
     # Param3:   (option) if this parameter is designed to 0 no NEW-LINE
     #           character will be send after the text output.
     # Return:   -
@@ -1348,7 +1348,7 @@ sub notify {
         my $outLine;
 
         if (ref($text) eq 'ARRAY') {
-            $outLine = join("", @{$text});
+            $outLine = join("\n", @{$text});
         } else {
             $outLine = ("$text");
         }
