@@ -986,6 +986,7 @@ sub getDistributionData {
     my $sts = 0;
 
     # get distribution, start with lsb_release
+    my $distributor = 'unknown';
     my $executable = `whereis lsb_release` // '';
     $executable =~ s/^.*://;    # remove search file and get path info
 
@@ -993,8 +994,8 @@ sub getDistributionData {
         if ($executable) {
             $g_distributor{'name'} = `lsb_release --id` // 'unknown';
             $g_distributor{'name'} =~ s/.*:\s*(.*)\s*$/$1/;
-
-            if ($g_distributor{'name'} =~ /(Ubuntu|Mint)/i) {
+            $distributor = $g_distributor{'name'};
+            if ($g_distributor{'name'} =~ /(Debian|Ubuntu|Mint)/i) {
                 $g_distributor{'group'} = 'Debian';
             }
             $g_distributor{'id'} = `lsb_release --release` // 'unknown';
@@ -1010,7 +1011,7 @@ sub getDistributionData {
     } elsif (not defined($DISTRIBUTION_LIST{$g_distributor{'group'}})) {
 
         # distribution not detected
-        error("Distribution not supported, check getDistributionData()");
+        error("Distribution ($distributor) not supported, check getDistributionData()");
         $sts = 1;
     } else {
         $g_dist_ref = $DISTRIBUTION_LIST{$g_distributor{'group'}};
@@ -1333,7 +1334,7 @@ sub notify {
     # Outputs a text information if the current verbose level is less or
     # equal than the assigned test-output-level.
     # Param1:   assigned output level
-    # Param2:   text information; can be a scalar or a reference to an array 
+    # Param2:   text information; can be a scalar or a reference to an array
     #           of output text.
     # Param3:   (option) if this parameter is designed to 0 no NEW-LINE
     #           character will be send after the text output.
