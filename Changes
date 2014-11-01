@@ -1,14 +1,9 @@
 Revision history for project openvpn-certgen.
 
 v0.001 - 2014-10-12
+initial version
 
-[BUG FIXES]
-
-[DOCUMENTATION]
-
-[TESTS]
-
-[ENHANCEMENTS]
-
-[OTHER]
+v0.002 - 2014-10-31
+fix - Distribution name 'Debian' included to support this type.
+fix - cwd() exported from package Cwd.
 

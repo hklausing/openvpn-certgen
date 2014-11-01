@@ -49,7 +49,7 @@ use File::Path qw(make_path remove_tree);
 use File::Spec;
 use Getopt::Long;
 use Config::Tiny;
-use Cwd qw(abs_path);
+use Cwd qw(cwd abs_path);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use Archive::Tar;
 use File::Find;
