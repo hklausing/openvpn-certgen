@@ -7,3 +7,7 @@ v0.002 - 2014-10-31
 fix - Distribution name 'Debian' included to support this type.
 fix - cwd() exported from package Cwd.
 
+v0.003 - 2014-11-02
+fix - Documentation improvements (some details about KEY_xxx)
+fix - Key KEY_CN removed, the new content is used by the
+        certificate target name like server, client1, ...

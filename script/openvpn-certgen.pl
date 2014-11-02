@@ -23,6 +23,11 @@
 #               initial script
 # 2014-10-27    v0.002 H. Klausing
 #               Update of build script. Comments removed.
+# 2014-11-02    v0.003 H. Klausing
+#               -   Documentation updated.
+#               -   KEY_CN removed from config file, this value comes from the
+#                   name of the target for the certificate
+#                   (e.g. server, client1, ...)
 ################################################################################
 #
 #
@@ -59,8 +64,8 @@ use Carp qw(croak);                       # required for croak()
 #
 #
 #--- constants -------------------------
-our $VERSION = '0.002';
-my $RELEASE_DATE = '2014-10-27';
+our $VERSION = '0.003';
+my $RELEASE_DATE = '2014-11-02';
 Readonly::Hash my %DISTRIBUTION_LIST => (
     'Debian' => {
         'easyrsa_trg'  => '/usr/share/doc/openvpn/examples/easy-rsa',
@@ -186,7 +191,7 @@ sub processFlow {
         $sts = activateKeysFiles();                   # directory keys must be existing
         $sts = initCertificatPaths() unless ($sts);
         $sts = activateKeysFiles() unless ($sts);
-        $sts = updateVars() unless ($sts);
+        $sts = updateVars('server') unless ($sts);
 
         if ($g_options{'list'}) {
 
@@ -201,7 +206,8 @@ sub processFlow {
 
             foreach my $client (@{$g_options{'clients'}}) {
                 if ($sts == 0) {
-                    $sts = makeClientCertificate($client);
+                    $sts = updateVars($client) unless ($sts);
+                    $sts = makeClientCertificate($client) unless ($sts);
                     notify(1, "Client certificate and key for '$client' generated") unless $sts;
                 }
             }
@@ -426,7 +432,6 @@ sub createConfigFile {
         'KEY_CITY'     => "Munich",                # Locality Name (eg, city)
         'KEY_ORG'      => "HappyProgramming",      # Organization Name (eg, company)
         'KEY_EMAIL'    => 'me@myhost.mydomain',    # Email Address
-        'KEY_CN'       => 'server',                # Common Name
         'KEY_NAME'     => 'Ja Mei',                # Name
         'KEY_OU'       => 'IT-Fun',                # Organizational Unit Name (eg, section)
     };
@@ -455,10 +460,11 @@ sub updateVars {
     ############################################################################
     # This subfunction updates the vars file with the required values from the
     # configuration file.
-    # Param1:   -
+    # Param1:   name of KEY_CN, should be 'server' or a unique client name.
     # Return:   0: check was successful
     #           1: one or more options are bad
     ############################################################################
+    my ($key_cn) = @_;
     my $sts          = 0;
     my $content_vars = '';
     my $vars_file    = $g_paths{'OVPN-easy-rsa'} . '/vars';
@@ -471,10 +477,17 @@ sub updateVars {
         close $fh or croak("Error: file '$vars_file' close failed!");
     }
 
+    # replace KEY_CN related be the server/client name
+    $g_config->{'vars'}{'KEY_CN'} = $key_cn;
+
     #  update values
-    foreach my $key (keys(%{$g_config->{'vars'}})) {
-        my $value = $g_config->{'vars'}{$key};
-        $content_vars =~ s/^(export\s+$key="?).*?("?\s*)$/$1$value$2/m;
+    my ($key, $value);
+    while( ($key, $value) = each(%{$g_config->{'vars'}})) {
+        ## check if value contains spaces and original value is not enclosed in double quotes
+        if(($value =~ / \s /smx) && !( $content_vars =~ / $key \s* = \s* "/smx)){
+            $value = '"' . $value . '"';
+        }
+        $content_vars =~ s/^ ( export \s+ $key = "? ) .*? ("? \s* ) $/$1${value}$2/smxg;
     }
 
     # write file content back
@@ -548,7 +561,7 @@ sub makeServerCertificate {
     #           1: one or more options are bad
     ############################################################################
     my $sts      = 0;
-    my $name_crt = $g_paths{'OVPN-easy-rsa-keys'} . '/' . $g_config->{'vars'}{'KEY_CN'} . '.crt';
+    my $name_crt = $g_paths{'OVPN-easy-rsa-keys'} . '/server.crt';
 
     if (not(-f $name_crt) || $g_options{'force'}) {
         doBuildKeyServer();
@@ -650,7 +663,7 @@ sub doBuildKeyServer {
 
 sub doBuildKeyClient {
     my ($client) = @_;
-    runCommand('KEY_CN=$client', './build-key --batch ' . $client);
+    runCommand('./build-key --batch ' . $client);
     return 0;
 }
 
@@ -939,7 +952,7 @@ After installation execute following steps:
 10) select file of Certificate of ...: /home/<user>/openvpn/certs/ca.crt
 11) select file of Privat Key: /home/<user>/openvpn/certs/client.key
 12) select Optional …
-13) select renogoration interval with 60
+13) select regeneration interval with 60
 14) activate LZO-Compression
 15) unselect TCP protocal related to the settings
 16) unselect TAB device related to the settings
@@ -1528,7 +1541,8 @@ The name of client can have the following characters: a-z, A-Z, 0-9, '_', '-' or
 
 openvpn-certgen.pl is a self-signed certificate generator tool, used for OpenVPN.
 It covers multiple functions to get up a running OpenVPN installation on
-server and on client systems.
+server and on client systems. The function based on 'easy-rsa', the setting file
+of this project are modified by values from the openvpn-certgen.pl config file.
 
 The script is able to install required packages and tools to setup an
 OpenVPN server. This is done automatically if the script is started and
@@ -1813,7 +1827,7 @@ Default setting: route=192.168.1.0 255.255.255.0
 
 =item * server
 
-Key server will be copied directly to config file.
+VPN server network address, it will be copied directly to config file.
 
 Default setting: server=10.8.0.0 255.255.255.0
 
@@ -1826,61 +1840,83 @@ Default setting: server=10.8.0.0 255.255.255.0
 In this section are mainly all parameter listed that are used to create
 the certificates for server and clients. The key/values pairs makes the
 the certificates generation process independent from any user activities.
+These parameters refers to the file .../easy-rsa/var.
 
 =over 4
 
 =item * CA_EXPIRE
 
+Amount of days when the root certificate key expires.
+
 Default setting: CA_EXPIRE=3650
 
 =item * KEY_CITY
 
+City name (L) of the certificate owner.
+
 Default setting: KEY_CITY=Munich
 
-=item * KEY_CN
-
-Default setting: KEY_CN=server
-
 =item * KEY_COUNTRY
+
+Country name (C) of certificate owner.
 
 Default setting: KEY_COUNTRY=DE
 
 =item * KEY_EMAIL
 
+Email address (emailAddress) to contact the certificate owner.
+
 Default setting: KEY_EMAIL=me@myhost.mydomain
 
 =item * KEY_EXPIRE
+
+Defines the days when certificates expire.
 
 Default setting: KEY_EXPIRE=3650
 
 =item * KEY_NAME
 
+Locality Name
+
 Default setting: KEY_NAME=Ja Mei
 
 =item * KEY_ORG
+
+Organisation name (O) of certificate.
 
 Default setting: KEY_ORG=HappyProgramming
 
 =item * KEY_OU
 
+Organisation Unit (OU) of certificate.
+
 Default setting: KEY_OU=IT-Fun
 
 =item * KEY_PROVINCE
+
+This defines the state or province name (ST) for the certificate.
 
 Default setting: KEY_PROVINCE=Bavaria
 
 =item * KEY_SIZE
 
+Amount of days when the key lifetime ends for Diffie Hellman key.
+
 Default setting: KEY_SIZE=2048
 
 =back
 
+Note:
+
+Parameter KEY_CN in file 'vars' is replaced by the name 'server' or by
+a used unique client name. The value is listed at Common name (CN)
+information for the certificate.
 
 
 
 =head1 VERSION
 
-Current script version is 0.001 (release date 2014-10-12).
+Current script version can be checked out with openvpn-certgen.pl --version
 
 
 
