@@ -28,6 +28,12 @@
 #               -   KEY_CN removed from config file, this value comes from the
 #                   name of the target for the certificate
 #                   (e.g. server, client1, ...)
+# 2014-11-04    v0.004 H. Klausing
+#               -   Documentation corrected, option --setup needs to be used
+#                   in step 2. Option --keep is now listed in the help text.
+#               -   link-mtu removed for server.conf file
+#               -   /etc/openvpn/cert and listed files have no permission
+#                   for group and others.
 ################################################################################
 #
 #
@@ -64,8 +70,8 @@ use Carp qw(croak);                       # required for croak()
 #
 #
 #--- constants -------------------------
-our $VERSION = '0.003';
-my $RELEASE_DATE = '2014-11-02';
+our $VERSION = '0.004';
+my $RELEASE_DATE = '2014-11-04';
 Readonly::Hash my %DISTRIBUTION_LIST => (
     'Debian' => {
         'easyrsa_trg'  => '/usr/share/doc/openvpn/examples/easy-rsa',
@@ -88,8 +94,8 @@ Readonly my $SCRIPTNAME => File::Basename::basename($0);
 my %g_options     = ('verbose' => 1);
 my %g_distributor = ();
 my %g_paths       = ();
-my $g_dist_ref    = undef;               #reference to found distributor value
-my $g_config      = undef;               # reference to configuration file value
+my $g_dist_ref    = undef;              #reference to found distributor value
+my $g_config      = undef;              # reference to configuration file value
 #
 #
 #--- script function start -------------
@@ -122,7 +128,7 @@ sub main {
         'help'    => 0,                 # 1: will display a help text
         'keep'    => 0,                 # 1= keep unused paths and files
         'list'    => 0,                 # lists defined settings
-        'setup'   => 0,                 # 1= installes the configuration file and the certificates to /etc/openvnc directory
+        'setup'   => 0,                 # 1= installs the configuration file and the certificates to /etc/openvnc directory
         'target'  => '/etc/openvpn',    # target directry for certificates
         'verbose' => 0,                 # verbose level: 0: silent, 1: standard, 2: many, 3: debug, 4:detailed
     );
@@ -206,7 +212,7 @@ sub processFlow {
 
             foreach my $client (@{$g_options{'clients'}}) {
                 if ($sts == 0) {
-                    $sts = updateVars($client) unless ($sts);
+                    $sts = updateVars($client)            unless ($sts);
                     $sts = makeClientCertificate($client) unless ($sts);
                     notify(1, "Client certificate and key for '$client' generated") unless $sts;
                 }
@@ -216,8 +222,7 @@ sub processFlow {
             $sts = storeKeysFiles() unless ($sts);
 
             if ($g_options{'keep'} == 0) {
-
-                # remove not required directories
+                ## remove not required directories
                 remove_tree($g_paths{'OVPN-easy-rsa'});
             }
         }
@@ -464,7 +469,7 @@ sub updateVars {
     # Return:   0: check was successful
     #           1: one or more options are bad
     ############################################################################
-    my ($key_cn) = @_;
+    my ($key_cn)     = @_;
     my $sts          = 0;
     my $content_vars = '';
     my $vars_file    = $g_paths{'OVPN-easy-rsa'} . '/vars';
@@ -482,9 +487,10 @@ sub updateVars {
 
     #  update values
     my ($key, $value);
-    while( ($key, $value) = each(%{$g_config->{'vars'}})) {
+
+    while (($key, $value) = each(%{$g_config->{'vars'}})) {
         ## check if value contains spaces and original value is not enclosed in double quotes
-        if(($value =~ / \s /smx) && !( $content_vars =~ / $key \s* = \s* "/smx)){
+        if (($value =~ / \s /smx) && !($content_vars =~ / $key \s* = \s* "/smx)) {
             $value = '"' . $value . '"';
         }
         $content_vars =~ s/^ ( export \s+ $key = "? ) .*? ("? \s* ) $/$1${value}$2/smxg;
@@ -755,7 +761,6 @@ status          /var/log/openvpn-status.log
 comp-lzo
 verb            3
 keepalive       10 120
-link-mtu
 persist-key
 persist-tun
 client-to-client
@@ -782,6 +787,11 @@ EOF
         copy($dirSource . '/server.crt',  $dirEtcCerts . '/server.crt')  or croak("Copy failed: $!");
         copy($dirSource . '/server.key',  $dirEtcCerts . '/server.key')  or croak("Copy failed: $!");
         copy($dirLinux . '/server.conf',  $dirEtc . '/server.conf')      or croak("Copy failed: $!");
+        chmod(0700, $dirEtcCerts);
+        chmod(0700, $dirEtcCerts . '/' . $dh_file);
+        chmod(0700, $dirEtcCerts . '/ca.crt');
+        chmod(0700, $dirEtcCerts . '/server.crt');
+        chmod(0700, $dirEtcCerts . '/server.key');
     }
     my $winOutput = $content;
     $winOutput =~ s/\(ostype\)/Windows/;
@@ -1008,6 +1018,7 @@ sub getDistributionData {
             $g_distributor{'name'} = `lsb_release --id` // 'unknown';
             $g_distributor{'name'} =~ s/.*:\s*(.*)\s*$/$1/;
             $distributor = $g_distributor{'name'};
+
             if ($g_distributor{'name'} =~ /(Debian|Ubuntu|Mint)/i) {
                 $g_distributor{'group'} = 'Debian';
             }
@@ -1478,7 +1489,7 @@ openvpn-certgen.pl - Certificate Generator for OpenVPN
 
 =head1 SYNOPSIS
 
- openvpn-certgen.pl [-c|--clean] [-f|--force] [-l|--list] [-s|--setup]
+ openvpn-certgen.pl [-c|--clean] [-f|--force] [-k|--keep] [-l|--list] [-s|--setup]
             [-t|--target PATH] [-v|--verbose LEVEL] [CLIENT ...]
  openvpn-certgen.pl -h|--help
  openvpn-certgen.pl --man
@@ -1501,6 +1512,11 @@ Recreates a server and client certificate if it is existing.
 
 Prints a short help information to the display.
 
+=item -k | --keep
+
+The created working directories with the used files are not deleted if
+the script finish. This make a check of the processed data easier.
+
 =item -l | --list
 
 Lists the content of the current configuration file to the display.
@@ -1512,7 +1528,7 @@ Prints more details about this script to the display.
 =item -s | --setup
 
 Installs a path F</etc/openvpn> with a configuration file and a path F<./certs> with
-certificate files.
+certificate files (dhxxxx.pem, ca.crt, server.crt and server.key').
 
 =item -t | --target  PATH
 
@@ -1648,7 +1664,8 @@ a certificate was created (execution Step3 and Step4).
 
 If the configuration files is prepared a second execution of openvpn-certgen.pl
 will create automatically all required file to build a server certificate
-in one shot.
+in one shot. To copy the certificates to /etc/openvpn/cert and the updated
+openvpn.conf file to /etc/openvpn it is proposed to used the option --setup.
 
 The second or all following calls can be used with a client name. If a
 client name if found in the parameter list a zip-file will be created.
@@ -1714,18 +1731,23 @@ certificate and key files.
     sudo openvpn-certgen -t=/tmp/etc/openvpn -v=3
 
 This execution will create a configuration file with some dummy values. The
-location of the file will be listed for easier access. The script does not
-check if the content was changed.
+location of the file will be listed for easier access.
+
 
 =item * Second start
+
+At this point the script does not check if the generated script configuration
+content was changed as proposed in frist step.
 
 Now all required master and server configuration files will be created. Two
 client names are also given and this information will be used to generated
 client packages.
 
-    sudo openvpn-certgen -t=/tmp/etc/openvpn -v=3 clientname1 clientname2
+    sudo openvpn-certgen -s -t=/tmp/etc/openvpn -v=3 clientname1 clientname2
 
 The packages are stored in F</tmp/etc/openvpn/certificates>.
+
+It is not needed to list the client names now, but it is possible.
 
 =item * New client
 

@@ -11,3 +11,11 @@ v0.003 - 2014-11-02
 fix - Documentation improvements (some details about KEY_xxx)
 fix - Key KEY_CN removed, the new content is used by the
         certificate target name like server, client1, ...
+
+v0.004 - 2014-11-04
+fix - Documentation corrected, option --setup needs to be used
+      in step 2. Option --keep is now listed in the help text.
+fix - link-mtu removed for server.conf file
+fix - /etc/openvpn/cert and listed files have no permission
+      for group and others.
+
