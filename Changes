@@ -19,3 +19,5 @@ fix - link-mtu removed for server.conf file
 fix - /etc/openvpn/cert and listed files have no permission
       for group and others.
 
+v0.005 - 2014-11-05
+fix - /etc/openvpn/cert/<files> have permission 0600.

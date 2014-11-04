@@ -34,6 +34,8 @@
 #               -   link-mtu removed for server.conf file
 #               -   /etc/openvpn/cert and listed files have no permission
 #                   for group and others.
+# 2014-11-04    v0.005 H. Klausing
+#               -   /etc/openvpn/cert/<files> have permission 0600.
 ################################################################################
 #
 #
@@ -70,7 +72,7 @@ use Carp qw(croak);                       # required for croak()
 #
 #
 #--- constants -------------------------
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 my $RELEASE_DATE = '2014-11-04';
 Readonly::Hash my %DISTRIBUTION_LIST => (
     'Debian' => {
@@ -788,10 +790,10 @@ EOF
         copy($dirSource . '/server.key',  $dirEtcCerts . '/server.key')  or croak("Copy failed: $!");
         copy($dirLinux . '/server.conf',  $dirEtc . '/server.conf')      or croak("Copy failed: $!");
         chmod(0700, $dirEtcCerts);
-        chmod(0700, $dirEtcCerts . '/' . $dh_file);
-        chmod(0700, $dirEtcCerts . '/ca.crt');
-        chmod(0700, $dirEtcCerts . '/server.crt');
-        chmod(0700, $dirEtcCerts . '/server.key');
+        chmod(0600, $dirEtcCerts . '/' . $dh_file);
+        chmod(0600, $dirEtcCerts . '/ca.crt');
+        chmod(0600, $dirEtcCerts . '/server.crt');
+        chmod(0600, $dirEtcCerts . '/server.key');
     }
     my $winOutput = $content;
     $winOutput =~ s/\(ostype\)/Windows/;
