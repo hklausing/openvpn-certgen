@@ -21,3 +21,8 @@ fix - /etc/openvpn/cert and listed files have no permission
 
 v0.005 - 2014-11-05
 fix - /etc/openvpn/cert/<files> have permission 0600.
+
+v0.006 - 2014-12-04
+fix - Required version for Test::File set to 1.34.
+fix - Text corrections in script openvpn-certgen.pl
+fix - Build.PL parameter --original-condition handling changed.

@@ -22,7 +22,7 @@ my $builder = Module::Build->new(
     license        => 'GPL3',
     dist_author    => q{H. Klausing <h dot klausing at gmx dot de>},
     dist_abstract  => 'OpenVPN certificate Generator for Linux environment',
-    dist_version   => '0.005',
+    dist_version   => '0.006',
     create_readme  => 0,                                                       # do not touch the existing README
     sign           => 0,                                                       # no signature is required
     release_status => 'stable',
@@ -30,7 +30,7 @@ my $builder = Module::Build->new(
         'Module::Build' => '0.40',
     },
     build_requires => {        # necessary to build and install, but not necessary for regular usage
-        'Test::File'   => '1.35',
+        'Test::File'   => '1.34',
         'Test::More'   => '0.98',
         'Test::Output' => '1.02',
         'Test::Pod'    => '1.48',
@@ -87,8 +87,16 @@ if ($help) {
     $builder->create_build_script();
 } elsif ($orgcondition) {
     ## put the project to HEAD of repository
-    $builder->dispatch('distclean');
-    system("rm -f MANIFEST META.* Makefile.PL");
+    my @delpath = ('_build', 'blib');
+
+    foreach my $path (@delpath) {
+        system("rm -rf $path");
+    }
+    my @delfile = ('MANIFEST', 'META.*', 'MYMETA.*', 'Makefile.PL', 'Build', 'openvpn-certgen-*.tar.gz');
+
+    foreach my $file (@delfile) {
+        system("rm -f $file");
+    }
 } else {
     ## create build script
     $builder->create_build_script();

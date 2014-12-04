@@ -6,7 +6,7 @@
 # Author:   H. Klausing
 #
 # openvpn-certgen.pl - Certification generator tool
-# This script can be used to execute all required steps to a a privat set of
+# This script can be used to execute all required steps to a a private set of
 # certificates. It was designed to use mainly for OpenVPN.
 #
 # Function flow:
@@ -36,6 +36,8 @@
 #                   for group and others.
 # 2014-11-04    v0.005 H. Klausing
 #               -   /etc/openvpn/cert/<files> have permission 0600.
+# 2014-12-04    v0.006 H. Klausing
+#               -   Text corrections
 ################################################################################
 #
 #
@@ -72,8 +74,8 @@ use Carp qw(croak);                       # required for croak()
 #
 #
 #--- constants -------------------------
-our $VERSION = '0.005';
-my $RELEASE_DATE = '2014-11-04';
+our $VERSION = '0.006';
+my $RELEASE_DATE = '2014-12-04';
 Readonly::Hash my %DISTRIBUTION_LIST => (
     'Debian' => {
         'easyrsa_trg'  => '/usr/share/doc/openvpn/examples/easy-rsa',
@@ -120,7 +122,6 @@ sub main {
     # Param1:   -
     # Return:   -
     ############################################################################
-    #    my $pkg = shift;    # remove package name from option list
     my $sts = 0;
 
     # define options default values
@@ -131,7 +132,7 @@ sub main {
         'keep'    => 0,                 # 1= keep unused paths and files
         'list'    => 0,                 # lists defined settings
         'setup'   => 0,                 # 1= installs the configuration file and the certificates to /etc/openvnc directory
-        'target'  => '/etc/openvpn',    # target directry for certificates
+        'target'  => '/etc/openvpn',    # target directory for certificates
         'verbose' => 0,                 # verbose level: 0: silent, 1: standard, 2: many, 3: debug, 4:detailed
     );
     my $result = GetOptions(
@@ -357,7 +358,7 @@ sub activateKeysFiles {
 
 sub storeKeysFiles {
     ############################################################################
-    # Stores all files aund directories of the keys folder for lateretConfigFile
+    # Stores all files and directories of the keys folder for lateretConfigFile
     # Param1:   -
     # Return:   0: check was successful
     #           1: one or more options are bad
@@ -1186,7 +1187,7 @@ sub getEasyRsaData {
         my $where = $ff->fetch('to' => $extract_path);
 
         if ($where) {
-            notify(3, "easy-rsa data download successfull");
+            notify(3, "easy-rsa data download successful");
 
             # restore content of downloaded, archived file
             my $root_dir = extractTarGzFile($where, $extract_path);

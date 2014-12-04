@@ -111,5 +111,5 @@ This step is for lazy people :-) It's required, that the use takes
 care for the correct execution environment.
 
 1.  $ tar -zxf openvpn-certgen-<version>.tar.gz
-2.  $ cp openvpn-certgen/script/openvpn-certgen.pl <traget>
+2.  $ cp openvpn-certgen/script/openvpn-certgen.pl <target>
 
